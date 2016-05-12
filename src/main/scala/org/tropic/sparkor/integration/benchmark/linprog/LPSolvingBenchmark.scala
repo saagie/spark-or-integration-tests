@@ -1,11 +1,11 @@
 package org.tropic.sparkor.integration.benchmark.linprog
 
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
-import org.tropic.sparkor.integration.benchmark.linprog.oscar.{ConstraintType, lpSolver}
+import org.apache.spark.mllib.linalg.Vector
+import org.tropic.sparkor.integration.benchmark.linprog.oscar.{ConstraintType, LPSolver}
 import org.tropic.sparkor.integration.benchmark.linprog.sparkor.SparkOrSolver
 import org.tropic.sparkor.utils.MatrixUtils
 
-object Main {
+object LPSolvingBenchmark extends App {
 
   /**
     * Solves LP with OscaR or spark-or, computes elapsed time and solution
@@ -17,7 +17,7 @@ object Main {
     val t0 = System.nanoTime()
     val (solution, score) = block // call-by-name
     val t1 = System.nanoTime()
-    (solution, score, (t1 - t0) / 1000000000.0)
+    (solution, score, (t1 - t0) / 1e9)
   }
 
   /**
@@ -38,9 +38,9 @@ object Main {
   /**
     * Integration test to compare the solutions between OscaR and spark-or
     *
-    * @param args a option to choose solve with lpSolver (to entry something) or not
+    * //@param args a option to choose solve with lpSolver (to entry something) or not
     */
-  def main(args: Array[String]): Unit = {
+  //def main(args: Array[String]): Unit = {
 
     val option: Boolean = args.length > 0
 
@@ -57,7 +57,7 @@ object Main {
     for (i <- n.indices) {
       val param = new LPGeneration(m(i), n(i), maxInt)
       if (option) {
-        val lp = new lpSolver()
+        val lp = new LPSolver()
         val (newA, newC) = lp.addZeros(param.A, param.c)
         val res = solveLinearProblem {
           lp.solve(newA, param.b, newC, ConstraintType.GreaterThan)
@@ -94,5 +94,5 @@ object Main {
       println("****************************************************************")
 
     }
-  }
+  //}
 }

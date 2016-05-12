@@ -10,7 +10,7 @@ import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.linalg.Vectors
 import org.tropic.sparkor.integration.benchmark.linprog.oscar.ConstraintType._
 
-class lpSolver {
+class LPSolver {
 
   /**
     * Prepends zeros to A matrix and c vector to satisfy lpsolve array size

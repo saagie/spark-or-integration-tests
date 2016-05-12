@@ -11,7 +11,7 @@ class SparkOrSolver {
   var solution: Solution = null
 
   def solutionFoundCallback(iter: Int, s: Solution, solver: Solver) {
-    println("Solution at iteration " + iter)
+    //println("Solution at iteration " + iter)
     //println(s.getVector)
   }
 
