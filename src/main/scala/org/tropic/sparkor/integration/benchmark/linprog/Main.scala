@@ -1,6 +1,6 @@
 package org.tropic.sparkor.integration.benchmark.linprog
 
-import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.tropic.sparkor.integration.benchmark.linprog.oscar.{ConstraintType, lpSolver}
 import org.tropic.sparkor.integration.benchmark.linprog.sparkor.SparkOrSolver
 import org.tropic.sparkor.utils.MatrixUtils
@@ -11,14 +11,13 @@ object Main {
     * Solves LP with OscaR or spark-or, computes elapsed time and solution
     *
     * @param block function to solve the problem
-    * @tparam R return type
     * @return (Solution, Total time in seconds)
     */
-  def solveLinearProblem[R](block: => R): (R, Double) = {
+  def solveLinearProblem(block: => (Vector, Double)): (Vector, Double, Double) = {
     val t0 = System.nanoTime()
-    val result = block    // call-by-name
+    val (solution, score) = block // call-by-name
     val t1 = System.nanoTime()
-    (result, (t1 - t0) / 1000000000.0)
+    (solution, score, (t1 - t0) / 1000000000.0)
   }
 
   /**
@@ -39,25 +38,35 @@ object Main {
   /**
     * Integration test to compare the solutions between OscaR and spark-or
     *
-    * @param args
+    * @param args a option to choose solve with lpSolver (to entry something) or not
     */
   def main(args: Array[String]): Unit = {
-    val lp = new lpSolver()
-    val lp2 = new SparkOrSolver()
+
+    val option: Boolean = args.length > 0
 
     val m = Array(5, 10, 50, 100, 210, 500)
     val n = Array(3, 18, 40, 90, 250, 500)
-    /*val m = 2
-    val n = 4*/
-    for (i <- n.indices) {
-      val maxInt = 10
+    val maxInt = 10
 
+    var solution1: Vector = null
+    var score1: Double = 0
+    var t1: Double = 0
+
+    val lp2 = new SparkOrSolver()
+
+    for (i <- n.indices) {
       val param = new LPGeneration(m(i), n(i), maxInt)
-      val (newA, newC) = lp.addZeros(param.A, param.c)
-      val ((solution1, score1), t1) = solveLinearProblem {
-        lp.solve(newA, param.b, newC, ConstraintType.GreaterThan)
+      if (option) {
+        val lp = new lpSolver()
+        val (newA, newC) = lp.addZeros(param.A, param.c)
+        val res = solveLinearProblem {
+          lp.solve(newA, param.b, newC, ConstraintType.GreaterThan)
+        }
+        solution1 = res._1
+        score1 = res._2
+        t1 = res._3
       }
-      val ((solution2, score2), t2) = solveLinearProblem {
+      val (solution2, score2, t2) = solveLinearProblem {
         lp2.solve(MatrixUtils.arrayToMatrix(param.A), param.b, param.c, ConstraintType.GreaterThan)
       }
 
@@ -68,17 +77,21 @@ object Main {
         for (i <- param.A.indices) println(param.A(i))
         println("b:\n" + param.b)
         println("c:\n" + param.c)
-        println("\nSolution of lp_solve:" + solution1)
+        if (option)
+          println("\nSolution of lp_solve:" + solution1)
         println("Solution of spark-or:" + solution2)
       }
-      println("*************************************************")
+      println("****************************************************************")
       println("nbRows = " + n(i) + " & nbCols = " + m(i))
-      println("\nValue of objective function with lp_solve: " + score1)
+      if (option)
+        println("\nValue of objective function with lp_solve: " + score1)
       println("Value of objective function with spark-or: " + score2)
-      println("\nElapsed time of lp_solve: " + t1 + " s")
+      if (option)
+        println("\nElapsed time of lp_solve: " + t1 + " s")
       println("Elapsed time of spark-or: " + t2 + " s")
-      println("\nMean square error : " + mse(solution1, solution2))
-      println("*************************************************")
+      if (option)
+        println("\nMean square error : " + mse(solution1, solution2))
+      println("****************************************************************")
 
     }
   }
