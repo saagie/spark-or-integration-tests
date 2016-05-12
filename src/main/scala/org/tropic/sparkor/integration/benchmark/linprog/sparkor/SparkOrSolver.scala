@@ -12,19 +12,19 @@ class SparkOrSolver {
 
   def solutionFoundCallback(iter: Int, s: Solution, solver: Solver) {
     println("Solution at iteration " + iter)
-    println(s.getVector)
+    //println(s.getVector)
   }
 
   def solvingStoppedCallback(s: Solution, solver: Solver): Unit = {
-    println("Final solution")
-    println(s.getVector)
-    println("Score")
-    println(solver.getScore)
+    //println("Final solution")
+    //println(s.getVector)
+    //println("Score")
+    //println(solver.getScore)
     solution = s
   }
 
   def solve(A: Matrix, b: Vector, c: Vector, constraintType: ConstraintType): (Vector, Double)  = {
-    var iterInterval = 2
+    var iterInterval = 5
     val conf = new SparkConf().setAppName("sparkor").setMaster("local[*]")
     val sc = new SparkContext(conf)
     val solver = new InteriorPointSolver(sc)
@@ -34,7 +34,6 @@ class SparkOrSolver {
     solver.setProblem(problem)
     solver.setNewSolutionFoundCallback(iterInterval, solutionFoundCallback)
     solver.setSolvingStoppedCallback(solvingStoppedCallback)
-    println("appel solve")
     solver.solve()
 
     var score = solver.getScore

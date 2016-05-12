@@ -29,6 +29,7 @@ object Main {
     * @return the mean square error
     */
   def mse(x1: Vector, x2: Vector): Double = {
+    assert(x1.size == x2.size, "x1 and x2 must have the same size")
     val result = for(i <- 0 until x1.size) yield math.pow(x1(i) - x2(i), 2)
     var mse = 0.0
     for(i <- result.indices) mse += result(i)
@@ -44,29 +45,41 @@ object Main {
     val lp = new lpSolver()
     val lp2 = new SparkOrSolver()
 
-    val m = 2
-    val n = 10
-    val maxInt = 10
+    val m = Array(5, 10, 50, 100, 210, 500)
+    val n = Array(3, 18, 40, 90, 250, 500)
+    /*val m = 2
+    val n = 4*/
+    for (i <- n.indices) {
+      val maxInt = 10
 
-    val param = new LPGeneration(m, n, maxInt)
-    val (newA, newC) = lp.addZeros(param.A, param.c)
-    val ((solution1, score1), t1) = solveLinearProblem{lp.solve(newA, param.b, newC, ConstraintType.GreaterThan)}
-    val ((solution2, score2), t2) = solveLinearProblem{lp2.solve(MatrixUtils.arrayToMatrix(param.A), param.b, param.c, ConstraintType.GreaterThan)}
+      val param = new LPGeneration(m(i), n(i), maxInt)
+      val (newA, newC) = lp.addZeros(param.A, param.c)
+      val ((solution1, score1), t1) = solveLinearProblem {
+        lp.solve(newA, param.b, newC, ConstraintType.GreaterThan)
+      }
+      val ((solution2, score2), t2) = solveLinearProblem {
+        lp2.solve(MatrixUtils.arrayToMatrix(param.A), param.b, param.c, ConstraintType.GreaterThan)
+      }
 
-    // Print solution
-    if (m < 10 || n < 10) {
-      println("\nParameters:")
-      println("A:")
-      for (i <- param.A.indices) println(param.A(i))
-      println("b:\n" + param.b)
-      println("c:\n" + param.c)
-      println("\nSolution of lp_solve:" + solution1)
-      println("Solution of spark-or:" + solution2)
+      // Print solution
+      if (m(i) < 10 || n(i) < 10) {
+        println("\nParameters:")
+        println("A:")
+        for (i <- param.A.indices) println(param.A(i))
+        println("b:\n" + param.b)
+        println("c:\n" + param.c)
+        println("\nSolution of lp_solve:" + solution1)
+        println("Solution of spark-or:" + solution2)
+      }
+      println("*************************************************")
+      println("nbRows = " + n(i) + " & nbCols = " + m(i))
+      println("\nValue of objective function with lp_solve: " + score1)
+      println("Value of objective function with spark-or: " + score2)
+      println("\nElapsed time of lp_solve: " + t1 + " s")
+      println("Elapsed time of spark-or: " + t2 + " s")
+      println("\nMean square error : " + mse(solution1, solution2))
+      println("*************************************************")
+
     }
-    println("\nValue of objective function with lp_solve: " + score1)
-    println("Value of objective function with spark-or: " + score2)
-    println("\nElapsed time of lp_solve: " + t1 + " s")
-    println("Elapsed time of spark-or: " + t2 + " s")
-    println("\nMean square error : " + mse(solution1, solution2))
   }
 }
