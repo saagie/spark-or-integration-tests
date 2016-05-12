@@ -1,8 +1,9 @@
 package org.tropic.sparkor.integration.benchmark.linprog
 
 import org.apache.spark.mllib.linalg.Vector
-import org.tropic.sparkor.integration.benchmark.linprog.oscar.{ConstraintType, LinearProblem}
-import org.tropic.sparkor.integration.benchmark.linprog.sparkor.LinearProblemSolver
+import org.tropic.sparkor.integration.benchmark.linprog.oscar.{ConstraintType, lpSolver}
+import org.tropic.sparkor.integration.benchmark.linprog.sparkor.SparkOrSolver
+import org.tropic.sparkor.utils.MatrixUtils
 
 object Main {
 
@@ -40,17 +41,17 @@ object Main {
     * @param args
     */
   def main(args: Array[String]): Unit = {
-    val lp = new LinearProblem()
-    val lp2 = new LinearProblemSolver() //TODO: to change with real class of spark-or
+    val lp = new lpSolver()
+    val lp2 = new SparkOrSolver()
 
-    val m = 200
-    val n = 500
+    val m = 2
+    val n = 10
     val maxInt = 10
 
     val param = new LPGeneration(m, n, maxInt)
     val (newA, newC) = lp.addZeros(param.A, param.c)
     val ((solution1, score1), t1) = solveLinearProblem{lp.solve(newA, param.b, newC, ConstraintType.GreaterThan)}
-    val ((solution2, score2), t2) = solveLinearProblem{lp2.solve(param.A, param.b, param.c, ConstraintType.GreaterThan)} //TODO: to change with spark-or
+    val ((solution2, score2), t2) = solveLinearProblem{lp2.solve(MatrixUtils.arrayToMatrix(param.A), param.b, param.c, ConstraintType.GreaterThan)}
 
     // Print solution
     if (m < 10 || n < 10) {
