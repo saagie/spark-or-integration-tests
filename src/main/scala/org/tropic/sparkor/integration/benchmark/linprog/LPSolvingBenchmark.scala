@@ -56,7 +56,7 @@ object LPSolvingBenchmark extends App {
 
 
 
-  val disableLpSolve: Boolean = args.length > 0 && args(0) != "--disable-lpsolve"
+  val disableLpSolve: Boolean = args.length > 0 && args(0) == "--disable-lpsolve"
 
   val m = Array(5, 20, 50, 100, 250, 500)
   val n = Array(3, 10, 40, 90, 200, 400)
@@ -70,7 +70,7 @@ object LPSolvingBenchmark extends App {
 
   for (i <- n.indices) {
     val param = new LPGeneration(m(i), n(i), maxInt)
-    if (disableLpSolve) {
+    if (!disableLpSolve) {
       val lp = new LPSolver()
       val (newA, newC) = lp.addZeros(param.A, param.c)
       val res = solveLinearProblem {
@@ -91,19 +91,19 @@ object LPSolvingBenchmark extends App {
       for (i <- param.A.indices) println(param.A(i))
       println("b:\n" + param.b)
       println("c:\n" + param.c)
-      if (disableLpSolve)
+      if (!disableLpSolve)
         println("\nSolution of lp_solve:" + solution1)
       println("Solution of spark-or:" + solution2)
     }
     println("****************************************************************")
     println("nbRows = " + n(i) + " & nbCols = " + m(i))
-    if (disableLpSolve)
+    if (!disableLpSolve)
       println("\nValue of objective function with lp_solve: " + score1)
     println("Value of objective function with spark-or: " + score2)
-    if (disableLpSolve)
+    if (!disableLpSolve)
       println("\nElapsed time of lp_solve: " + t1 + " s")
     println("Elapsed time of spark-or: " + t2 + " s")
-    if (disableLpSolve)
+    if (!disableLpSolve)
       println("\nMean square error : " + mse(solution1, solution2))
     println("****************************************************************")
 
